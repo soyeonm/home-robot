@@ -1,0 +1,91 @@
+# @package _global_
+
+defaults:
+  - /habitat: habitat_config_base
+  - /habitat/task: objectnav
+  - /habitat/simulator/agents@habitat.simulator.agents.agent_0: rgbds_agent 
+  - /habitat/simulator/agents@habitat.simulator.agents.agent_1: rgbds_agent 
+  #- /habitat/simulator/agents@habitat.simulator.agents.main_agent: rgbds_agent 
+  - /habitat/dataset/objectnav: hm3d_v2
+  - _self_
+
+habitat:
+  environment:
+    max_episode_steps: 500
+
+  simulator:
+    turn_angle: 30
+    tilt_angle: 30
+    action_space_config: "v1"
+    #Originally in objectnav_hm3d_v2_rgbd_with_semantic
+    # agents:
+    #   main_agent:
+    #     sim_sensors:
+    #       rgb_sensor:
+    #         width: 640
+    #         height: 480
+    #         hfov: 79
+    #         position: [0, 0.88, 0]
+    #       depth_sensor:
+    #         width: 640
+    #         height: 480
+    #         hfov: 79
+    #         min_depth: 0.5
+    #         max_depth: 5.0
+    #         position: [0, 0.88, 0]
+    #       semantic_sensor:
+    #         width: 640
+    #         height: 480
+    #         hfov: 79
+    #         position: [0, 0.88, 0]
+    #     height: 0.88
+    #     radius: 0.18
+    # habitat_sim_v0:
+    #   gpu_device_id: 0
+    #   allow_sliding: False
+    # gym:
+    # obs_keys:
+    #   - agent_0_head_depth
+    #   - agent_1_head_depth
+    #   - agent_0_obj_start_sensor
+    #   - agent_1_obj_start_sensor
+    #   - agent_0_obj_goal_sensor
+    #   - agent_1_obj_goal_sensor
+    #   - agent_0_joint
+    #   - agent_1_joint
+
+    type: RearrangeSim-v0
+    seed: 100
+    #Just commented out
+    # additional_object_paths:
+    #   - "data/objects/ycb/configs/"
+    #   - "data/objects/amazon_berkeley/configs/"
+    #   - "data/objects/google_object_dataset/configs/"
+    concur_render: True
+    auto_sleep: True
+    agents_order:
+      - agent_0
+      - agent_1
+    agents:
+      agent_0:
+        radius: 0.3
+        articulated_agent_urdf: ./data/robots/hab_fetch/robots/hab_suction.urdf
+        articulated_agent_type: FetchSuctionRobot
+        ik_arm_urdf: ./data/robots/hab_fetch/robots/fetch_onlyarm.urdf
+        joint_start_noise: 0.0
+      agent_1:
+        radius: 0.3
+        # sim_sensors:
+        #   head_depth_sensor:
+        #     height: 256
+        #     width: 256
+        # A new instance of the sensor is created. The agents do not share a
+        # depth camera, but instead a different depth camera is created for
+        # each agent.
+        articulated_agent_urdf: ./data/robots/hab_fetch/robots/hab_suction.urdf
+        articulated_agent_type: FetchSuctionRobot
+
+    habitat_sim_v0:
+      gpu_device_id: 0 #added from objectnav_hm3d_v2_rgbd_with_semantic
+      allow_sliding: False
+      enable_physics: True
