@@ -62,12 +62,15 @@ if TYPE_CHECKING:
 @registry.register_simulator(name="RearrangeSim-v0")
 class RearrangeSim(HabitatSim):
     def __init__(self, config: "DictConfig"):
+        print("src thirdparty")
         if len(config.agents) > 1:
             with read_write(config):
                 for agent_name, agent_cfg in config.agents.items():
                     # using list to create a copy of the sim_sensors keys since we will be
                     # editing the sim_sensors config
                     sensor_keys = list(agent_cfg.sim_sensors.keys())
+                    breakpoint()
+                    #Do like in habitat_simulator
                     for sensor_key in sensor_keys:
                         sensor_config = agent_cfg.sim_sensors.pop(sensor_key)
                         sensor_config.uuid = (

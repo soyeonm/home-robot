@@ -280,6 +280,7 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
 
         sim_sensors = []
         for agent_config in self.habitat_config.agents.values():
+            breakpoint()
             for sensor_cfg in agent_config.sim_sensors.values():
                 sensor_type = registry.get_sensor(sensor_cfg.type)
 

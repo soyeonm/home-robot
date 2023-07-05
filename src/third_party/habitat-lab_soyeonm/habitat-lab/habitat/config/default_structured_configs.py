@@ -1285,6 +1285,8 @@ class SimulatorDepthSensorConfig(SimulatorSensorConfig):
 @dataclass
 class HabitatSimRGBSensorConfig(SimulatorCameraSensorConfig):
     type: str = "HabitatSimRGBSensor"
+    #Just added
+    uuid: str = "rgb"
 
 
 @dataclass
@@ -1293,11 +1295,13 @@ class HabitatSimDepthSensorConfig(SimulatorCameraSensorConfig):
     min_depth: float = 0.0
     max_depth: float = 10.0
     normalize_depth: bool = True
-
+    #depth
+    uuid: str = "depth"
 
 @dataclass
 class HabitatSimSemanticSensorConfig(SimulatorCameraSensorConfig):
     type: str = "HabitatSimSemanticSensor"
+    uuid: str = "semantic"
 
 
 @dataclass
