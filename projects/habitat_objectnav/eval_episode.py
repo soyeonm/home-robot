@@ -53,11 +53,13 @@ if __name__ == "__main__":
     config.habitat.dataset.split = "val"
     config.EXP_NAME = "debug"
 
-    agent = ObjectNavAgent(config=config, device_id=0)
-    env = HabitatObjectNavEnv(Env(config=config), config=config)
+    #agent = ObjectNavAgent(config=config, device_id=0)
+    #env = HabitatObjectNavEnv(Env(config=config), config=config)
+    env = Env(config=config)
 
-    agent.reset()
+    #agent.reset()
     env.reset()
+    breakpoint()
 
     t = 0
 

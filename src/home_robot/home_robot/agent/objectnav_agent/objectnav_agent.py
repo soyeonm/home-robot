@@ -39,6 +39,8 @@ class ObjectNavAgent(Agent):
 
         self._module = ObjectNavAgentModule(config)
 
+        if not(torch.cuda.is_available()):
+            config.NO_GPU = True
         if config.NO_GPU:
             self.device = torch.device("cpu")
             self.module = self._module
