@@ -49,6 +49,9 @@ if TYPE_CHECKING:
     from torch import Tensor
 
 
+from habitat.config import read_write
+
+
 def overwrite_config(
     config_from: DictConfig,
     config_to: Any,
@@ -279,6 +282,25 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
         self.habitat_config = config
 
         sim_sensors = []
+
+        #copied from rearrange_sim
+        if len(config.agents) > 1:
+            with read_write(config):
+                for agent_name, agent_cfg in config.agents.items():
+                    # using list to create a copy of the sim_sensors keys since we will be
+                    # editing the sim_sensors config
+                    sensor_keys = list(agent_cfg.sim_sensors.keys())
+                    #breakpoint()
+                    #Do like in habitat_simulator
+                    for sensor_key in sensor_keys:
+                        sensor_config = agent_cfg.sim_sensors.pop(sensor_key)
+                        sensor_config.uuid = (
+                            f"{agent_name}_{sensor_config.uuid}"
+                        )
+                        agent_cfg.sim_sensors[
+                            f"{agent_name}_{sensor_key}"
+                        ] = sensor_config
+
         for agent_config in self.habitat_config.agents.values():
             #breakpoint()
             for sensor_cfg in agent_config.sim_sensors.values():

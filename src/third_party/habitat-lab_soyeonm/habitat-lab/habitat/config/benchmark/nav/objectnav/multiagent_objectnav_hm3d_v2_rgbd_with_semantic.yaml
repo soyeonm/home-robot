@@ -118,7 +118,7 @@ habitat:
     # habitat_sim_v0:
     #   allow_sliding: True
 
-    type: RearrangeSim-v1 #HumanoidNavSim-v0 #RearrangeSim-v0
+    #type: RearrangeSim-v1 #HumanoidNavSim-v0 #RearrangeSim-v0
     seed: 100
     #Just commented out
     # additional_object_paths:
