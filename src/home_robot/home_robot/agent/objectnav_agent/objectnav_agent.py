@@ -351,6 +351,7 @@ class ObjectNavAgent(Agent):
         obs_preprocessed = obs_preprocessed.permute(0, 3, 1, 2)
 
         curr_pose = np.array([obs.gps[0], obs.gps[1], obs.compass[0]])
+        breakpoint()
         pose_delta = torch.tensor(
             pu.get_rel_pose_change(curr_pose, self.last_poses[0])
         ).unsqueeze(0)

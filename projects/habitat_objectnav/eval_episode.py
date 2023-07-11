@@ -54,7 +54,7 @@ if __name__ == "__main__":
     config.habitat.dataset.split = "val"
     config.EXP_NAME = "debug"
 
-    #agent = ObjectNavAgent(config=config, device_id=0)
+    agent = ObjectNavAgent(config=config, device_id=0)
     env = HabitatObjectNavEnv(Env(config=config), config=config)
     #env = Env(config=config)
     #breakpoint()
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         print(t)
         obs = env.get_observation()
         #breakpoint()
-        #action, info = agent.act(obs)
+        action, info = agent.act(obs)
         env.apply_action(action, info=info)
 
     print(env.get_episode_metrics())
