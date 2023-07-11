@@ -2,6 +2,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+import cv2
 
 # TODO Install home_robot, home_robot_sim and remove this
 sys.path.insert(
@@ -72,7 +73,7 @@ if __name__ == "__main__":
         #breakpoint()
         action, info = agent.act(obs)
         cv2.imshow('rgb', info['rgb'].numpy()); cv2.waitKey(1)
-        #breakpoint()
+        breakpoint()
         env.apply_action(action, info=info)
 
     print(env.get_episode_metrics())
