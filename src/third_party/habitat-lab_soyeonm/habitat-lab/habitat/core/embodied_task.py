@@ -280,7 +280,7 @@ class EmbodiedTask:
 
     def reset(self, episode: Episode):
         observations = self._sim.reset()
-        breakpoint()
+        #breakpoint()
         observations.update(
             self.sensor_suite.get_observations(
                 observations=observations, episode=episode, task=self

@@ -263,7 +263,7 @@ class Env:
 
         assert self._current_episode is not None, "Reset requires an episode"
         self.reconfigure(self._config)
-        breakpoint()
+        #breakpoint()
         observations = self.task.reset(episode=self.current_episode)
         self._task.measurements.reset_measures(
             episode=self.current_episode,
