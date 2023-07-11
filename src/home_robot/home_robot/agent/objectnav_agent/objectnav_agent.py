@@ -51,7 +51,7 @@ class ObjectNavAgent(Agent):
             # Use DataParallel only as a wrapper to move model inputs to GPU
             self.module = DataParallel(self._module, device_ids=[self.device_id])
 
-        self.visualize = config.VISUALIZE or config.PRINT_IMAGES
+        self.visualize = True #config.VISUALIZE or config.PRINT_IMAGES
         self.use_dilation_for_stg = config.AGENT.PLANNER.use_dilation_for_stg
         self.semantic_map = Categorical2DSemanticMapState(
             device=self.device,
@@ -335,6 +335,7 @@ class ObjectNavAgent(Agent):
             vis_inputs[0]["third_person_image"] = obs.third_person_image
             vis_inputs[0]["short_term_goal"] = short_term_goal
             vis_inputs[0]["dilated_obstacle_map"] = dilated_obstacle_map
+            vis_inputs[0]["rgb"] = rgb = torch.from_numpy(obs.rgb).to(self.device)
         info = {**planner_inputs[0], **vis_inputs[0]}
 
         return action, info
@@ -351,7 +352,7 @@ class ObjectNavAgent(Agent):
         obs_preprocessed = obs_preprocessed.permute(0, 3, 1, 2)
 
         curr_pose = np.array([obs.gps[0], obs.gps[1], obs.compass[0]])
-        breakpoint()
+        #breakpoint()
         pose_delta = torch.tensor(
             pu.get_rel_pose_change(curr_pose, self.last_poses[0])
         ).unsqueeze(0)
