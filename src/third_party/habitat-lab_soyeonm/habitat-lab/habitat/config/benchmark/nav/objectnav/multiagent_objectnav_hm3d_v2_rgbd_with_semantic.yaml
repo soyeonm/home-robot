@@ -13,6 +13,10 @@ habitat:
   environment:
     max_episode_steps: 500
 
+  gym:
+    obs_keys:
+      - agent_0_rgb_sensor
+      - agent_1_rgb_sensor
   simulator:
     turn_angle: 30
     tilt_angle: 30
@@ -53,8 +57,68 @@ habitat:
     #   - agent_1_obj_goal_sensor
     #   - agent_0_joint
     #   - agent_1_joint
+    #TODO: Add sensors for multiagent
+      # - agent_0_articulated_agent_arm_depth
+      # - agent_0_relative_resting_position
+      # - agent_0_obj_start_sensor
+      # - agent_0_obj_goal_sensor
+      # - agent_0_obj_start_gps_compass
+      # - agent_0_obj_goal_gps_compass
+      # - agent_0_is_holding
+      # - agent_0_ee_pos
+      # - agent_0_localization_sensor
+      # - agent_0_has_finished_oracle_nav
+      # - agent_0_other_agent_gps
+      # - agent_1_head_depth
+      # - agent_1_relative_resting_position
+      # - agent_1_obj_start_sensor
+      # - agent_1_obj_goal_sensor
+      # - agent_1_obj_start_gps_compass
+      # - agent_1_obj_goal_gps_compass
+      # - agent_1_is_holding
+      # - agent_1_ee_pos
+      # - agent_1_localization_sensor
+      # - agent_1_has_finished_oracle_nav
+      # - agent_1_other_agent_gps
+  # simulator:
+    # Add Spot robot agents
+    agents:
+      agent_0:
+        radius: 0.25
+        height: 1.8
+        articulated_agent_urdf: data/robots/hab_spot_arm/urdf/hab_spot_arm.urdf
+        articulated_agent_type: "SpotRobot"
+        sim_sensors:
+          rgb_sensor:
+            height: 480
+            width: 640
+            hfov: 47
+          # arm_rgb_sensor:
+          #   height: 480
+          #   width: 640
+          #   hfov: 47
+          # arm_depth_sensor:
+          #   height: 224
+          #   width: 171
+          #   hfov: 55
+      agent_1:
+        radius: 0.3
+        articulated_agent_urdf: 'data/humanoids/humanoid_data/female2_0.urdf'
+        articulated_agent_type: 'KinematicHumanoid'
+        rest_pose_data_path: 'data/humanoids/humanoid_data/standing_pose_smplx.pkl'
+        motion_data_path: "data/humanoids/humanoid_data/walking_motion_processed_smplx.pkl"
+        sim_sensors:
+          rgb_sensor:
+            height: 480
+            width: 640
+            hfov: 47
+    kinematic_mode: True
+    ac_freq_ratio: 1
+    step_physics: False
+    # habitat_sim_v0:
+    #   allow_sliding: True
 
-    type: RearrangeSim-v0
+    type: RearrangeSim-v1 #HumanoidNavSim-v0 #RearrangeSim-v0
     seed: 100
     #Just commented out
     # additional_object_paths:
@@ -66,24 +130,24 @@ habitat:
     agents_order:
       - agent_0
       - agent_1
-    agents:
-      agent_0:
-        radius: 0.3
-        articulated_agent_urdf: ./data/robots/hab_fetch/robots/hab_suction.urdf
-        articulated_agent_type: FetchSuctionRobot
-        ik_arm_urdf: ./data/robots/hab_fetch/robots/fetch_onlyarm.urdf
-        joint_start_noise: 0.0
-      agent_1:
-        radius: 0.3
-        # sim_sensors:
-        #   head_depth_sensor:
-        #     height: 256
-        #     width: 256
-        # A new instance of the sensor is created. The agents do not share a
-        # depth camera, but instead a different depth camera is created for
-        # each agent.
-        articulated_agent_urdf: ./data/robots/hab_fetch/robots/hab_suction.urdf
-        articulated_agent_type: FetchSuctionRobot
+    # agents:
+    #   agent_0:
+    #     radius: 0.3
+    #     articulated_agent_urdf: ./data/robots/hab_fetch/robots/hab_suction.urdf
+    #     articulated_agent_type: FetchSuctionRobot
+    #     ik_arm_urdf: ./data/robots/hab_fetch/robots/fetch_onlyarm.urdf
+    #     joint_start_noise: 0.0
+    #   agent_1:
+    #     radius: 0.3
+    #     # sim_sensors:
+    #     #   head_depth_sensor:
+    #     #     height: 256
+    #     #     width: 256
+    #     # A new instance of the sensor is created. The agents do not share a
+    #     # depth camera, but instead a different depth camera is created for
+    #     # each agent.
+    #     articulated_agent_urdf: ./data/robots/hab_fetch/robots/hab_suction.urdf
+    #     articulated_agent_type: FetchSuctionRobot
 
     habitat_sim_v0:
       gpu_device_id: 0 #added from objectnav_hm3d_v2_rgbd_with_semantic

@@ -47,7 +47,7 @@ if __name__ == "__main__":
     print("-" * 100)
 
     config = get_config(args.habitat_config_path, args.baseline_config_path)
-    breakpoint()
+    #breakpoint()
 
     config.NUM_ENVIRONMENTS = 1
     config.PRINT_IMAGES = 1
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     #agent = ObjectNavAgent(config=config, device_id=0)
     #env = HabitatObjectNavEnv(Env(config=config), config=config)
     env = Env(config=config)
-    breakpoint()
+    #breakpoint()
 
     #agent.reset()
     env.reset()

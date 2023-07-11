@@ -59,8 +59,8 @@ if TYPE_CHECKING:
     from omegaconf import DictConfig
 
 
-@registry.register_simulator(name="RearrangeSim-v1")
-class RearrangeSim(HabitatSim):
+@registry.register_simulator(name="HumanoidNavSim-v0")
+class HumanoidNavSim(HabitatSim):
     def __init__(self, config: "DictConfig"):
         print("src thirdparty")
         if len(config.agents) > 1:
@@ -253,23 +253,7 @@ class RearrangeSim(HabitatSim):
         SimulatorBackend.reset(self)
         for i in range(len(self.agents)):
             self.reset_agent(i)
-        sim_obs = self.get_sensor_observations()
-        breakpoint()
-        #return None
-        return self._sensor_suite.get_observations(sim_obs)
-
-    # #From habitat simulator
-    # def reset(self) -> Observations:
-    #     sim_obs = super().reset()
-    #     if self._update_agents_state():
-    #         sim_obs = self.get_sensor_observations()
-
-    #     self._prev_sim_obs = sim_obs
-    #     if self.config.enable_batch_renderer:
-    #         self.add_keyframe_to_observations(sim_obs)
-    #         return sim_obs
-    #     else:
-    #         return self._sensor_suite.get_observations(sim_obs)
+        return None
 
     def reconfigure(self, config: "DictConfig", ep_info: RearrangeEpisode):
         # self._handle_to_goal_name = ep_info.info["object_labels"]
@@ -279,8 +263,8 @@ class RearrangeSim(HabitatSim):
         # with read_write(config):
         #     config["scene"] = ep_info.scene_id
 
-        self.ep_info = ep_info
-        new_scene = self.prev_scene_id != ep_info.scene_id
+        # self.ep_info = ep_info
+        # new_scene = self.prev_scene_id != ep_info.scene_id
         # if new_scene:
         #     self._prev_obj_names = None
 
@@ -295,7 +279,7 @@ class RearrangeSim(HabitatSim):
         self._try_acquire_context()
         self.agents_mgr.reconfigure(new_scene)
 
-        self.prev_scene_id = ep_info.scene_id
+        # self.prev_scene_id = ep_info.scene_id
         # self._viz_templates = {}
         # self._viz_handle_to_template = {}
 
@@ -305,7 +289,7 @@ class RearrangeSim(HabitatSim):
             ao.joint_positions = set_joint_state
 
         # Load specified articulated object states from episode config
-        #self._set_ao_states_from_ep(ep_info)
+        self._set_ao_states_from_ep(ep_info)
 
         self.agents_mgr.post_obj_load_reconfigure()
 
