@@ -120,7 +120,7 @@ class HabitatObjectNavEnv(HabitatEnv):
         )
         semantic = np.zeros((480, 640, 1)).astype(np.int32)
         obs = self._preprocess_semantic(obs, semantic)
-        return obs
+        return obs 
 
     def _preprocess_semantic(
         self, obs: home_robot.core.interfaces.Observations, habitat_semantic: np.ndarray
