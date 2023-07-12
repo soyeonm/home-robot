@@ -94,7 +94,7 @@ class HumanoidNavAction(BaseVelAction, HumanoidJointAction):
         return spaces.Dict(
             {
                 self._action_arg_prefix
-                + "oracle_nav_soc_action": spaces.Box(
+                + "humanoid_nav_action": spaces.Box(
                     shape=(1,),
                     low=np.finfo(np.float32).min,
                     high=np.finfo(np.float32).max,
