@@ -70,6 +70,7 @@ if __name__ == "__main__":
         print(t)
         obs = env.get_observation()
         action, info = agent.act(obs)
+        cv2.imshow("rgb", info["rgb"]); cv2.waitKey(1); breakpoint()
         env.apply_action(action, info=info)
 
     print(env.get_episode_metrics())
