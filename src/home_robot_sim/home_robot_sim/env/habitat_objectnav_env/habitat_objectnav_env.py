@@ -119,7 +119,7 @@ class HabitatObjectNavEnv(HabitatEnv):
             third_person_image=habitat_obs["agent_1_third_rgb"] #None
         )
         semantic = np.zeros((480, 640, 1)).astype(np.int32)
-        breakpoint()
+        #breakpoint()
         obs = self._preprocess_semantic(obs, semantic)
 
         return obs 

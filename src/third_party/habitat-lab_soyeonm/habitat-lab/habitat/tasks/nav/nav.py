@@ -56,6 +56,20 @@ except ImportError:
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
+from typing import Any, Dict, List, Tuple, Union
+from habitat.core.simulator import Sensor, SensorSuite
+from collections import OrderedDict
+
+from habitat.tasks.rearrange.utils import (
+    CacheHelper,
+    CollisionDetails,
+    UsesArticulatedAgentInterface,
+    rearrange_collision,
+    rearrange_logger,
+)
+
+import copy
+
 
 cv2 = try_cv2_import()
 
@@ -1328,3 +1342,130 @@ class NavigationTask(EmbodiedTask):
 
     def _check_episode_is_active(self, *args: Any, **kwargs: Any) -> bool:
         return not getattr(self, "is_stop_called", False)
+
+
+
+@registry.register_task(name="NavWithHumanoid-v0")
+class NavigationWithHumanoidTask(NavigationTask):
+    #Support humanoid walking around (multiagent step)
+
+    _cur_episode_step: int
+    _articulated_agent_pos_start: Dict[str, Tuple[np.ndarray, float]]
+
+    def _duplicate_sensor_suite(self, sensor_suite: SensorSuite) -> None:
+        """
+        Modifies the sensor suite in place to duplicate articulated agent specific sensors
+        between the two articulated agents.
+        """
+
+        task_new_sensors: Dict[str, Sensor] = {}
+        task_obs_spaces = OrderedDict()
+        for agent_idx, agent_id in enumerate(self._sim.agents_mgr.agent_names):
+            print(sensor_suite.sensors.items())
+            for sensor_name, sensor in sensor_suite.sensors.items():
+                # if isinstance(sensor, UsesArticulatedAgentInterface):
+                #     new_sensor = copy.copy(sensor)
+                #     new_sensor.agent_id = agent_idx
+                #     full_name = f"{agent_id}_{sensor_name}"
+                #     task_new_sensors[full_name] = new_sensor
+                #     task_obs_spaces[full_name] = new_sensor.observation_space
+                # else:
+                #     task_new_sensors[sensor_name] = sensor
+                #     task_obs_spaces[sensor_name] = sensor.observation_space
+                new_sensor = copy.copy(sensor)
+                new_sensor.agent_id = agent_idx
+                full_name = f"{agent_id}_{sensor_name}"
+                task_new_sensors[full_name] = new_sensor
+                task_obs_spaces[full_name] = new_sensor.observation_space
+
+        sensor_suite.sensors = task_new_sensors
+        sensor_suite.observation_spaces = spaces.Dict(spaces=task_obs_spaces)
+
+    #copied from rearrange_task
+    def __init__(
+        self,
+        *args,
+        sim,
+        dataset=None,
+        should_place_articulated_agent=True,
+        **kwargs,
+    ) -> None:
+        #self.n_objs = len(dataset.episodes[0].targets)
+        super().__init__(sim=sim, dataset=dataset, **kwargs)
+        self.actions = OrderedDict({action_name: action_class for action_name, action_class in self.actions.items() if action_name in ['humanoid_nav_action', 'robot_nav_action']})
+
+        self._should_place_articulated_agent = should_place_articulated_agent
+        self._sim  = sim
+        self._sim_reset = True
+        self._fixed_starting_position = False
+        # if self._config.should_save_to_cache or osp.exists(cache_path):
+        #     self._articulated_agent_init_cache = CacheHelper(
+        #         cache_path,
+        #         def_val={},
+        #         verbose=False,
+        #     )
+        #     self._articulated_agent_pos_start = (
+        #         self._articulated_agent_init_cache.load()
+        #     )
+        # else:
+        #     self._articulated_agent_pos_start = None
+
+        if len(self._sim.agents_mgr) > 1:
+            # Duplicate sensors that handle articulated agents. One for each articulated agent.
+            self._duplicate_sensor_suite(self.sensor_suite)
+
+
+    def step(self, action: Dict[str, Any], episode: Episode):
+        #action_args = action["action_args"]
+        #Just force
+        action_args = {'agent_0_robot_nav_action': action, 'agent_1_humanoid_nav_action': 100}
+        # if self._config.enable_safe_drop and self._is_violating_safe_drop(
+        #     action_args
+        # ):
+        #     action_args["grip_action"] = None
+        obs = super().step(action=action, episode=episode)
+
+        return obs
+
+    def reset(self, episode: Episode, fetch_observations: bool = True):
+        self._episode_id = episode.episode_id
+        self._ignore_collisions = []
+
+        if self._sim_reset:
+            self._sim.reset()
+            for action_instance in self.actions.values():
+                action_instance.reset(episode=episode, task=self)
+            self._is_episode_active = True
+
+            if self._should_place_articulated_agent:
+                if self._fixed_starting_position:
+                    np.random.seed(self._seed)
+                    self._sim.pathfinder.seed(self._seed)
+
+                for agent_idx in range(self._sim.num_articulated_agents):
+                    self._set_articulated_agent_start(agent_idx)
+
+        self.prev_measures = self.measurements.get_metrics()
+        # self._targ_idx = 0
+        # self.coll_accum = CollisionDetails()
+        # self.prev_coll_accum = CollisionDetails()
+        # self.should_end = False
+        # self._done = False
+        # self._cur_episode_step = 0
+        if fetch_observations:
+            self._sim.maybe_update_articulated_agent()
+            return self._get_observations(episode)
+        else:
+            return None
+
+    def _get_observations(self, episode):
+        obs = self._sim.get_sensor_observations()
+        obs = self._sim._sensor_suite.get_observations(obs)
+
+        task_obs = self.sensor_suite.get_observations(
+            observations=obs, episode=episode, task=self
+        )
+        obs.update(task_obs)
+        return obs
+
+    

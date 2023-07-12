@@ -78,6 +78,7 @@ class HumanoidRearrangeController:
         self.turning_step_amount = TURNING_STEP_AMOUNT
         self.threshold_rotate_not_move = TURNING_STEP_AMOUNT
         self.base_offset = mn.Vector3(base_offset)
+        breakpoint()
 
         if not os.path.isfile(walk_pose_path):
             raise RuntimeError(

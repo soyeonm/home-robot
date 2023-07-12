@@ -299,7 +299,7 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
                     # using list to create a copy of the sim_sensors keys since we will be
                     # editing the sim_sensors config
                     sensor_keys = list(agent_cfg.sim_sensors.keys())
-                    breakpoint()
+                    #breakpoint()
                     #breakpoint()
                     #Do like in habitat_simulator
                     for sensor_key in sensor_keys:

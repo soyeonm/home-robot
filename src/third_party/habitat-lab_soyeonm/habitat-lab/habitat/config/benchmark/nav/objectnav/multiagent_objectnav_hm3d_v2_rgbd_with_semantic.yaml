@@ -10,6 +10,33 @@ defaults:
   - _self_
 
 habitat:
+  task:
+    #type: NavWithHumanoid-v0 #RearrangeSim-v0
+    success_reward: 2.5
+    slack_reward: -1e-3
+    actions:
+      agent_0_robot_nav_action:
+        type: RobotNavAction
+        agent_index: 0
+      #   # For noncylinder navmesh action
+      #   # If we allow the agent to do sliding
+      #   # allow_dyn_slide: True
+      #   # # If the agent is allowed to slide if the agent needs to do rotation
+      #   # enable_rotation_check_for_dyn_slide: False
+      #   # # The distance threshold of treating collision
+      #   # collision_threshold: 0.02
+      #   # # The navmesh offset for the action control
+      #   # navmesh_offset: [[0.0, 0.0], [0.15, 0.0], [-0.15, 0.0]]
+      #   # # The navmesh offset for the agent placement
+      #   # navmesh_offset_for_agent_placement: [[0.0, 0.0], [0.15, 0.0], [-0.15, 0.0]]
+      #   # enable_lateral_move: False
+      #   # turn_thresh: 0.1
+      #   # dist_thresh: 0.5
+      agent_1_humanoid_nav_action:
+        type: HumanoidNavAction
+        agent_index: 1
+        #motion_control: human_joints
+
   environment:
     max_episode_steps: 500
 

@@ -256,10 +256,11 @@ class EmbodiedTask:
             entities_configs=config.actions,
             register_func=registry.get_task_action,
         )
+        #Just get robot_nav_action and humanoid_nav_action
+        #self.actions = OrderedDict({action_name: action_class for action_name, action_class in self.actions.items() if action_name in ['humanoid_nav_action', 'robot_nav_action']})
         self._action_keys = list(self.actions.keys())
 
         self._is_episode_active = False
-        #breakpoint()
 
     def _init_entities(self, entities_configs, register_func) -> OrderedDict:
         entities = OrderedDict()
@@ -320,9 +321,11 @@ class EmbodiedTask:
 
     def step(self, action: Dict[str, Any], episode: Episode):
         action_name = action["action"]
-        # if "action_args" not in action or action["action_args"] is None:
-        #     action["action_args"] = {}
-        action['action_args'] = {'agent_0_robot_nav_action': action_name, 'agent_1_humanoid_nav_action': 100}
+        if "action_args" not in action or action["action_args"] is None:
+            action["action_args"] = {}
+        #Just set
+        #action_name = ('agent_0_robot_nav_action', 'agent_1_humanoid_nav_action')
+        #action['action_args'] = {'agent_0_robot_nav_action': action_name, 'agent_1_humanoid_nav_action': 100}
         observations: Any = {}
         #breakpoint()
         #Do wrap step action

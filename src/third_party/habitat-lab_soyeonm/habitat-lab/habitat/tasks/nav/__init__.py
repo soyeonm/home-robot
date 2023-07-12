@@ -11,8 +11,13 @@ from habitat.core.registry import registry
 def _try_register_nav_task():
     import habitat.tasks.nav.humanoid_nav_action
     import habitat.tasks.nav.robot_nav_action
+
+    # if not HabitatSimActions.has_action("base_velocity"):
+    #     HabitatSimActions.extend_action_space("base_velocity")
+
     try:
         from habitat.tasks.nav.nav import NavigationTask  # noqa: F401
+        from habitat.tasks.nav.nav import NavigationWithHumanoidTask
     except ImportError as e:
         navtask_import_error = e
 

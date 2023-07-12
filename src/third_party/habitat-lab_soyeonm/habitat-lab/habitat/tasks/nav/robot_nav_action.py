@@ -28,32 +28,39 @@ class RobotNavAction(BaseVelAction, HumanoidJointAction):
     """
 
     def __init__(self, *args, task, **kwargs):
-        config = kwargs["config"]
-        self.motion_type = config.motion_control
-        if self.motion_type == "base_velocity":
-            BaseVelAction.__init__(self, *args, **kwargs)
+        # config = kwargs["config"]
+        # #breakpoint()
+        # if config['agent_index'] ==0:
+        # 	self.motion_type = "base_velocity"
+        # elif config['agent_index'] ==1:
+        # 	self.motion_type = "human_joints"
 
-        elif self.motion_type == "human_joints":
-            raise Exception("Can't happen")
+        # #self.motion_type = config.motion_control
+        # if self.motion_type == "base_velocity":
+        #     BaseVelAction.__init__(self, *args, **kwargs)
 
-        else:
-            raise ValueError("Unrecognized motion type for oracle nav  action")
+        # elif self.motion_type == "human_joints":
+        #     raise Exception("Can't happen")
 
-        self._task = task
+        # else:
+        #     raise ValueError("Unrecognized motion type for oracle nav  action")
+
+        # self._task = task
         
-        self._prev_ep_id = None
-        self._targets = {}
+        # self._prev_ep_id = None
+        # self._targets = {}
 
-        self.skill_done = False
+        # self.skill_done = False
 
         
-        print("RobotNavAction is called!")
+        # print("RobotNavAction is called!")
 
-        self.poses: List[np.ndarray] = []
-        self.waypoints: List[np.ndarray] = []
-        self.waypoint_pointer: int = 0
-        self.prev_navigable_point: np.ndarray = np.array([])
-        self.prev_pose: Tuple[np.ndarray, np.ndarray]
+        # self.poses: List[np.ndarray] = []
+        # self.waypoints: List[np.ndarray] = []
+        # self.waypoint_pointer: int = 0
+        # self.prev_navigable_point: np.ndarray = np.array([])
+        # self.prev_pose: Tuple[np.ndarray, np.ndarray]
+        pass
 
     
 
@@ -81,6 +88,28 @@ class RobotNavAction(BaseVelAction, HumanoidJointAction):
         self.poses = []
 
     def step(self, *args, is_last_action, **kwargs):
+        print("Robot Nav Action step!")
+        if self.counter ==0:
+            navigable_point = self._sim.pathfinder.get_random_navigable_point()
+            _navmesh_vertices = np.stack(
+                self._sim.pathfinder.build_navmesh_vertices(), axis=0
+            )
+            _island_sizes = [
+                self._sim.pathfinder.island_radius(p) for p in _navmesh_vertices
+            ]
+            _max_island_size = max(_island_sizes)
+            largest_size_vertex = _navmesh_vertices[
+                np.argmax(_island_sizes)
+            ]
+            _largest_island_idx = self._sim.pathfinder.get_island(
+                largest_size_vertex
+            )
+
+            start_pos = self._sim.pathfinder.get_random_navigable_point(
+                    island_index=_largest_island_idx
+                )
+            self.cur_articulated_agent.sim_obj.translation = start_pos
+
         self.skill_done = False
         action_to_take = kwargs[self._action_arg_prefix + "robot_nav_action"]
 
