@@ -259,6 +259,7 @@ class EmbodiedTask:
         self._action_keys = list(self.actions.keys())
 
         self._is_episode_active = False
+        #breakpoint()
 
     def _init_entities(self, entities_configs, register_func) -> OrderedDict:
         entities = OrderedDict()
@@ -279,6 +280,7 @@ class EmbodiedTask:
         return entities
 
     def reset(self, episode: Episode):
+        self._episode_id = episode.episode_id
         observations = self._sim.reset()
         #breakpoint()
         observations.update(
@@ -318,9 +320,14 @@ class EmbodiedTask:
 
     def step(self, action: Dict[str, Any], episode: Episode):
         action_name = action["action"]
-        if "action_args" not in action or action["action_args"] is None:
-            action["action_args"] = {}
+        # if "action_args" not in action or action["action_args"] is None:
+        #     action["action_args"] = {}
+        action['action_args'] = {'agent_0_robot_nav_action': action_name, 'agent_1_humanoid_nav_action': 100}
         observations: Any = {}
+        #breakpoint()
+        #Do wrap step action
+
+
         if isinstance(action_name, tuple):  # there are multiple actions
             for i, a_name in enumerate(action_name):
                 self._step_single_action(

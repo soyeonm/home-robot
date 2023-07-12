@@ -385,10 +385,17 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
         self._extra_runtime_perf_stats: Dict[str, Any] = {}
 
         
+
+
     #rearrange sim
     def _try_acquire_context(self):
         if self._concur_render:
             self.renderer.acquire_gl_context()
+
+    #rearrange sim
+    @property
+    def num_articulated_agents(self):
+        return len(self.agents_mgr)
 
     def create_sim_config(
         self, _sensor_suite: SensorSuite

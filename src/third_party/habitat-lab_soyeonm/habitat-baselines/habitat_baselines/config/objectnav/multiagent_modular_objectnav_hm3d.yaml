@@ -3,9 +3,25 @@
 defaults:
   - /habitat_baselines: habitat_baselines_rl_config_base
   - /benchmark/nav/objectnav: multiagent_objectnav_hm3d_v2_rgbd_with_semantic
+  - /habitat/task/actions@actions.agent_1_humanoid_nav_action: humanoid_nav_action
   - /habitat_baselines/rl/policy/obs_transforms:
     - resize_shortest_edge_base
     - center_cropper_base
+  # - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_0: hl_fixed
+  # - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_1: hl_socnav_human  #hab3_hl_neural_ma
+  # - /habitat_baselines/rl/policy/hierarchical_policy/defined_skills@habitat_baselines.rl.policy.agent_0.hierarchical_policy.defined_skills: oracle_skills_ma
+  # - /habitat_baselines/rl/policy/hierarchical_policy/defined_skills@habitat_baselines.rl.policy.agent_1.hierarchical_policy.defined_skills: oracle_skills_ma_humanoid
+  # - /habitat/task/lab_sensors:
+  #     - relative_resting_pos_sensor
+  #     - target_start_sensor
+  #     - goal_sensor
+  #     - is_holding_sensor
+  #     - end_effector_sensor
+  #     - target_start_gps_compass_sensor
+  #     - target_goal_gps_compass_sensor
+  #     - localization_sensor
+  #     - has_finished_oracle_nav
+  #     - other_agent_gps
   - _self_
 
 habitat:
@@ -34,6 +50,81 @@ habitat_baselines:
 
   eval:
     split: "val"
+
+
+  # rl:
+  #   agent:
+  #     num_pool_agents_per_type: [1, 8]
+  #     agent_sample_interval: 20
+  #     force_partner_sample_idx: -1
+  #   policy:
+  #     agent_0:
+  #       hierarchical_policy:
+  #         high_level_policy:
+  #           add_arm_rest: False
+  #           policy_input_keys:
+  #             - "articulated_agent_arm_depth"
+  #             - "is_holding"
+  #             - "obj_start_gps_compass"
+  #             - "obj_goal_gps_compass"
+  #             - "other_agent_gps"
+  #         # Override to use the oracle navigation skill (which will actually execute navigation).
+  #         defined_skills:
+  #           nav_to_obj:
+  #             skill_name: "OracleNavPolicy"
+  #             obs_skill_inputs: ["obj_start_sensor", "abs_obj_start_sensor", "obj_goal_sensor", "abs_obj_goal_sensor"]
+  #             max_skill_steps: 1500
+  #     agent_1:
+  #       hierarchical_policy:
+  #         high_level_policy:
+  #           name: "SocNavHumanHighLevelPolicy"
+  #           add_arm_rest: False
+  #           policy_input_keys:
+  #             - "head_depth"
+  #             - "is_holding"
+  #             - "obj_start_gps_compass"
+  #             - "obj_goal_gps_compass"
+  #             - "other_agent_gps"
+  #         # Override to use the oracle navigation skill (which will actually execute navigation).
+  #         defined_skills:
+  #           nav_to_obj:
+  #             skill_name: "OracleNavSocPolicy"
+  #             obs_skill_inputs: ["obj_start_sensor", "abs_obj_start_sensor", "obj_goal_sensor", "abs_obj_goal_sensor"]
+  #             max_skill_steps: 1500
+  #   ppo:
+  #     # ppo params
+  #     clip_param: 0.2
+  #     ppo_epoch: 1
+  #     num_mini_batch: 2
+  #     value_loss_coef: 0.5
+  #     entropy_coef: 0.0001
+  #     lr: 2.5e-4
+  #     eps: 1e-5
+  #     max_grad_norm: 0.2
+  #     num_steps: 128
+  #     use_gae: True
+  #     gamma: 0.99
+  #     tau: 0.95
+
+  #   ddppo:
+  #     sync_frac: 0.6
+  #     # The PyTorch distributed backend to use
+  #     distrib_backend: NCCL
+  #     # Visual encoder backbone
+  #     pretrained_weights: data/ddppo-models/gibson-2plus-resnet50.pth
+  #     # Initialize with pretrained weights
+  #     pretrained: False
+  #     # Initialize just the visual encoder backbone with pretrained weights
+  #     pretrained_encoder: False
+  #     # Whether the visual encoder backbone will be trained.
+  #     train_encoder: True
+  #     # Whether to reset the critic linear layer
+  #     reset_critic: False
+  #     # Model parameters
+  #     backbone: resnet18
+  #     rnn_type: LSTM
+  #     num_recurrent_layers: 2
+
 
   # rl:
   #   policy:

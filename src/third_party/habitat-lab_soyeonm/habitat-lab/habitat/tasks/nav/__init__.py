@@ -9,6 +9,8 @@ from habitat.core.registry import registry
 
 
 def _try_register_nav_task():
+    import habitat.tasks.nav.humanoid_nav_action
+    import habitat.tasks.nav.robot_nav_action
     try:
         from habitat.tasks.nav.nav import NavigationTask  # noqa: F401
     except ImportError as e:
