@@ -348,9 +348,9 @@ class RearrangeSim(HabitatSim):
         #     for obj_handle in self._targets
         # ]
 
-        # if self.first_setup:
-        #     self.first_setup = False
-        #     self.agents_mgr.first_setup()
+        if self.first_setup:
+            self.first_setup = False
+            self.agents_mgr.first_setup()
         #     # Capture the starting art states
         #     self._start_art_states = {
         #         ao: ao.joint_positions for ao in self.art_objs

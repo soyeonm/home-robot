@@ -29,6 +29,8 @@ from habitat.core.batch_rendering.env_batch_renderer_constants import (
     KEYFRAME_OBSERVATION_KEY,
     KEYFRAME_SENSOR_PREFIX,
 )
+from habitat.tasks.rearrange.marker_info import MarkerInfo
+
 from habitat.core.dataset import Episode
 from habitat.core.registry import registry
 from habitat.core.simulator import (
@@ -50,6 +52,13 @@ if TYPE_CHECKING:
 
 
 from habitat.config import read_write
+
+from habitat.tasks.rearrange.articulated_agent_manager import (
+    ArticulatedAgentManager,
+)
+
+from habitat_sim.sim import SimulatorBackend
+import time
 
 
 def overwrite_config(
@@ -334,7 +343,52 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
         self._prev_sim_obs: Optional[Observations] = None
 
         #rearrange sim 
-        self._markers: Dict[str, MarkerInfo] = {}
+        #self._markers: Dict[str, MarkerInfo] = {}
+
+        self.agents_mgr = ArticulatedAgentManager(self.habitat_config, self)
+
+        self.first_setup = True
+        self.ep_info: Optional[RearrangeEpisode] = None
+        self.prev_loaded_navmesh = None
+        self.prev_scene_id: Optional[str] = None
+
+        self._debug_render_articulated_agent = (
+            self.habitat_config.debug_render_articulated_agent
+        )
+        self._debug_render_goal = self.habitat_config.debug_render_goal
+        self._debug_render = self.habitat_config.debug_render
+        self._concur_render = self.habitat_config.concur_render
+        self._enable_gfx_replay_save = (
+            self.habitat_config.habitat_sim_v0.enable_gfx_replay_save
+        )
+        self._needs_markers = self.habitat_config.needs_markers
+        self._update_articulated_agent = (
+            self.habitat_config.update_articulated_agent
+        )
+        self._step_physics = self.habitat_config.step_physics
+        self._additional_object_paths = (
+            self.habitat_config.additional_object_paths
+        )
+        self._kinematic_mode = self.habitat_config.kinematic_mode
+        self._backend_runtime_perf_stat_names = (
+            # super().get_runtime_perf_stat_names()
+        )
+        self._extra_runtime_perf_stats: Dict[str, Any] = {}
+
+        self._start_art_states: Dict[
+            habitat_sim.physics.ManagedArticulatedObject, List[float]
+        ] = {}
+
+        # Number of physics updates per action
+        self.ac_freq_ratio = self.habitat_config.ac_freq_ratio
+
+        self._extra_runtime_perf_stats: Dict[str, Any] = {}
+
+        
+    #rearrange sim
+    def _try_acquire_context(self):
+        if self._concur_render:
+            self.renderer.acquire_gl_context()
 
     def create_sim_config(
         self, _sensor_suite: SensorSuite
@@ -451,6 +505,7 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
         for i in range(len(self.agents)):
             self.reset_agent(i)
 
+        sim_obs = self.get_sensor_observations()
         self._prev_sim_obs = sim_obs
         if self.config.enable_batch_renderer:
             self.add_keyframe_to_observations(sim_obs)
@@ -467,37 +522,41 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
     #     #return None
     #     return self._sensor_suite.get_observations(sim_obs)
 
-    def _add_markers(self, ep_info):
-        self._markers = {}
-        aom = self.get_articulated_object_manager()
-        for marker in ep_info.markers:
-            p = marker["params"]
-            ao = aom.get_object_by_handle(p["object"])
-            name_to_link = {}
-            name_to_link_id = {}
-            for i in range(ao.num_links):
-                name = ao.get_link_name(i)
-                link = ao.get_link_scene_node(i)
-                name_to_link[name] = link
-                name_to_link_id[name] = i
+    # def _add_markers(self, ep_info):
+    #     self._markers = {}
+    #     aom = self.get_articulated_object_manager()
+    #     for marker in ep_info.markers:
+    #         p = marker["params"]
+    #         ao = aom.get_object_by_handle(p["object"])
+    #         name_to_link = {}
+    #         name_to_link_id = {}
+    #         for i in range(ao.num_links):
+    #             name = ao.get_link_name(i)
+    #             link = ao.get_link_scene_node(i)
+    #             name_to_link[name] = link
+    #             name_to_link_id[name] = i
 
-            self._markers[marker["name"]] = MarkerInfo(
-                p["offset"],
-                name_to_link[p["link"]],
-                ao,
-                name_to_link_id[p["link"]],
-            )
+    #         self._markers[marker["name"]] = MarkerInfo(
+    #             p["offset"],
+    #             name_to_link[p["link"]],
+    #             ao,
+    #             name_to_link_id[p["link"]],
+    #         )
 
-    def get_marker(self, name: str) -> MarkerInfo:
-        return self._markers[name]
+    # def get_marker(self, name: str) -> MarkerInfo:
+    #     return self._markers[name]
 
-    def get_all_markers(self):
-        return self._markers
+    # def get_all_markers(self):
+    #     return self._markers
+
+    # #From rearrange_sim
+    # def _update_markers(self) -> None:
+    #     for m in self._markers.values():
+    #         m.update()
 
     #From rearrange_sim
-    def _update_markers(self) -> None:
-        for m in self._markers.values():
-            m.update()
+    def add_perf_timing(self, desc, t_start):
+        self._extra_runtime_perf_stats[desc] = time.time() - t_start
 
     #From rearrange_sim
     def internal_step(
@@ -516,6 +575,34 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
             self.add_perf_timing("step_world", t_start)
 
     def step(self, action: Union[str, np.ndarray, int]) -> Observations:
+        if self._debug_render:
+            if self._debug_render_articulated_agent:
+                self.agents_mgr.update_debug()
+            # rom = self.get_rigid_object_manager()
+            self._try_acquire_context()
+
+            # # Disable BB drawing for observation render
+            # for obj_id in self._draw_bb_objs:
+            #     self.set_object_bb_draw(False, obj_id)
+
+            # # Remove viz objects
+            # for obj in self._viz_objs.values():
+            #     if obj is not None and rom.get_library_has_id(obj.object_id):
+            #         rom.remove_object_by_id(obj.object_id)
+            # self._viz_objs = {}
+
+            # # Remove all visualized positions
+            # add_back_viz_objs = {}
+            # for name, viz_id in self.viz_ids.items():
+            #     if viz_id is None:
+            #         continue
+            #     viz_obj = rom.get_object_by_id(viz_id)
+            #     before_pos = viz_obj.translation
+            #     rom.remove_object_by_id(viz_id)
+            #     r = self._viz_handle_to_template[viz_id]
+            #     add_back_viz_objs[name] = (before_pos, r)
+            # self.viz_ids = defaultdict(lambda: None)
+
         self.maybe_update_articulated_agent()
 
         if self._concur_render:
@@ -544,8 +631,8 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
         if self._enable_gfx_replay_save:
             self.gfx_replay_manager.save_keyframe()
 
-        if self._needs_markers:
-            self._update_markers()
+        # if self._needs_markers:
+        #     self._update_markers()
 
         return obs
 
@@ -600,6 +687,11 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
         should_close_on_new_scene: bool = True,
     ) -> None:
         # TODO(maksymets): Switch to Habitat-Sim more efficient caching
+        #rearrange_sim
+        self.ep_info = ep_info
+        new_scene = self.prev_scene_id != ep_info.scene_id
+
+        #oriringal
         is_same_scene = habitat_config.scene == self._current_scene
         self.habitat_config = habitat_config
         self.sim_config = self.create_sim_config(self._sensor_suite)
@@ -610,6 +702,28 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
             super().reconfigure(self.sim_config)
 
         self._update_agents_state()
+
+        #rearrange_sim
+        self._try_acquire_context()
+        self.agents_mgr.reconfigure(new_scene)
+
+        self.prev_scene_id = ep_info.scene_id
+        # self._viz_templates = {}
+        # self._viz_handle_to_template = {}
+
+        # Set the default articulated object joint state.
+        for ao, set_joint_state in self._start_art_states.items():
+            ao.clear_joint_states()
+            ao.joint_positions = set_joint_state
+
+        # Load specified articulated object states from episode config
+        #self._set_ao_states_from_ep(ep_info)
+
+        self.agents_mgr.post_obj_load_reconfigure()
+
+        if self.first_setup:
+            self.first_setup = False
+            self.agents_mgr.first_setup()
 
     def geodesic_distance(
         self,
