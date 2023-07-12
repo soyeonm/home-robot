@@ -498,6 +498,7 @@ class RearrangeSim(HabitatSim):
         """
         aom = self.get_articulated_object_manager()
         for aoi_handle, joint_states in ep_info.ao_states.items():
+            breakpoint()
             ao = aom.get_object_by_handle(aoi_handle)
             ao_pose = ao.joint_positions
             for link_ix, joint_state in joint_states.items():

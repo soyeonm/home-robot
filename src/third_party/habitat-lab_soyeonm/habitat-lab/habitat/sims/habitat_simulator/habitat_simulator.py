@@ -333,6 +333,9 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
         )
         self._prev_sim_obs: Optional[Observations] = None
 
+        #rearrange sim 
+        self._markers: Dict[str, MarkerInfo] = {}
+
     def create_sim_config(
         self, _sensor_suite: SensorSuite
     ) -> habitat_sim.Configuration:
@@ -441,9 +444,12 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
         return is_updated
 
     def reset(self) -> Observations:
-        sim_obs = super().reset()
-        if self._update_agents_state():
-            sim_obs = self.get_sensor_observations()
+        # sim_obs = super().reset()
+        # if self._update_agents_state():
+        #     sim_obs = self.get_sensor_observations()
+        SimulatorBackend.reset(self)
+        for i in range(len(self.agents)):
+            self.reset_agent(i)
 
         self._prev_sim_obs = sim_obs
         if self.config.enable_batch_renderer:
@@ -451,15 +457,118 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
             return sim_obs
         else:
             return self._sensor_suite.get_observations(sim_obs)
+
+    # def reset(self):
+    #     SimulatorBackend.reset(self)
+    #     for i in range(len(self.agents)):
+    #         self.reset_agent(i)
+    #     sim_obs = self.get_sensor_observations()
+    #     breakpoint()
+    #     #return None
+    #     return self._sensor_suite.get_observations(sim_obs)
+
+    def _add_markers(self, ep_info):
+        self._markers = {}
+        aom = self.get_articulated_object_manager()
+        for marker in ep_info.markers:
+            p = marker["params"]
+            ao = aom.get_object_by_handle(p["object"])
+            name_to_link = {}
+            name_to_link_id = {}
+            for i in range(ao.num_links):
+                name = ao.get_link_name(i)
+                link = ao.get_link_scene_node(i)
+                name_to_link[name] = link
+                name_to_link_id[name] = i
+
+            self._markers[marker["name"]] = MarkerInfo(
+                p["offset"],
+                name_to_link[p["link"]],
+                ao,
+                name_to_link_id[p["link"]],
+            )
+
+    def get_marker(self, name: str) -> MarkerInfo:
+        return self._markers[name]
+
+    def get_all_markers(self):
+        return self._markers
+
+    #From rearrange_sim
+    def _update_markers(self) -> None:
+        for m in self._markers.values():
+            m.update()
+
+    #From rearrange_sim
+    def internal_step(
+        self, dt: Union[int, float], update_articulated_agent: bool = True
+    ) -> None:
+        """Step the world and update the articulated_agent.
+
+        :param dt: Timestep by which to advance the world. Multiple physics substeps can be excecuted within a single timestep. -1 indicates a single physics substep.
+
+        Never call sim.step_world directly or miss updating the articulated_agent.
+        """
+        # Optionally step physics and update the articulated_agent for benchmarking purposes
+        if self._step_physics:
+            t_start = time.time()
+            self.step_world(dt)
+            self.add_perf_timing("step_world", t_start)
 
     def step(self, action: Union[str, np.ndarray, int]) -> Observations:
-        sim_obs = super().step(action)
-        self._prev_sim_obs = sim_obs
-        if self.config.enable_batch_renderer:
-            self.add_keyframe_to_observations(sim_obs)
-            return sim_obs
+        self.maybe_update_articulated_agent()
+
+        if self._concur_render:
+            self._prev_sim_obs = self.start_async_render()
+
+            for _ in range(self.ac_freq_ratio):
+                self.internal_step(-1, update_articulated_agent=False)
+
+            t_start = time.time()
+            self._prev_sim_obs = self.get_sensor_observations_async_finish()
+            self.add_perf_timing(
+                "get_sensor_observations_async_finish", t_start
+            )
+
+            obs = self._sensor_suite.get_observations(self._prev_sim_obs)
         else:
-            return self._sensor_suite.get_observations(sim_obs)
+            for _ in range(self.ac_freq_ratio):
+                self.internal_step(-1, update_articulated_agent=False)
+
+            t_start = time.time()
+            self._prev_sim_obs = self.get_sensor_observations()
+            self.add_perf_timing("get_sensor_observations", t_start)
+
+            obs = self._sensor_suite.get_observations(self._prev_sim_obs)
+
+        if self._enable_gfx_replay_save:
+            self.gfx_replay_manager.save_keyframe()
+
+        if self._needs_markers:
+            self._update_markers()
+
+        return obs
+
+
+        #From original habitat_simulator
+        # sim_obs = super().step(action)
+        # self._prev_sim_obs = sim_obs
+        # if self.config.enable_batch_renderer:
+        #     self.add_keyframe_to_observations(sim_obs)
+        #     return sim_obs
+        # else:
+        #     return self._sensor_suite.get_observations(sim_obs)
+
+    #rearrange_sim
+    def maybe_update_articulated_agent(self):
+        """
+        Calls the update agents method on the articulated agent manager if the
+        `update_articulated_agent` configuration is set to True. Among other
+        things, this will set the articulated agent's sensors' positions to their new
+        positions.
+        """
+        if self._update_articulated_agent:
+            self.agents_mgr.update_agents()
 
     def render(self, mode: str = "rgb") -> Any:
         r"""
