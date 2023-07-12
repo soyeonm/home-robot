@@ -106,7 +106,7 @@ class HabitatObjectNavEnv(HabitatEnv):
         depth = self._preprocess_depth(habitat_obs["agent_1_depth"])
         goal_id, goal_name = self._preprocess_goal(habitat_obs["objectgoal"])
         obs = home_robot.core.interfaces.Observations(
-            rgb=habitat_obs["agent_0_rgb"],
+            rgb=habitat_obs["agent_1_third_rgb"],#["agent_0_rgb"],
             depth=depth,
             compass=habitat_obs["compass"],
             gps=self._preprocess_xy(habitat_obs["gps"]),
@@ -119,7 +119,9 @@ class HabitatObjectNavEnv(HabitatEnv):
             third_person_image=habitat_obs["agent_1_third_rgb"] #None
         )
         semantic = np.zeros((480, 640, 1)).astype(np.int32)
+        breakpoint()
         obs = self._preprocess_semantic(obs, semantic)
+
         return obs 
 
     def _preprocess_semantic(
