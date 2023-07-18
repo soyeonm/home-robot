@@ -102,7 +102,7 @@ class RobotNavAction(BaseVelAction, HumanoidJointAction):
         #breakpoint()
         if self.motion_type == "human_joints":
             return
-        if self.counter ==0:
+        if self._counter ==0:
             navigable_point = self._sim.pathfinder.get_random_navigable_point()
             _navmesh_vertices = np.stack(
                 self._sim.pathfinder.build_navmesh_vertices(), axis=0
@@ -129,6 +129,7 @@ class RobotNavAction(BaseVelAction, HumanoidJointAction):
         curr_path_points = []
         robot_pos = np.array(self.cur_articulated_agent.base_pos)
         self.poses.append(robot_pos)
+        self._counter +=1
 
         if self.motion_type == "base_velocity":
             # 0: stop, 1: forward, 2: left, 3: right

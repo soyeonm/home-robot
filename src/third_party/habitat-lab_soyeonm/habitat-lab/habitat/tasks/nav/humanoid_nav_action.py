@@ -462,7 +462,7 @@ class HumanoidNavAction(BaseVelAction, HumanoidJointAction):
         return self.humanoid_controller.joint_pose + list(obj_trans_offset) + list(obj_trans_base)
 
     def step(self, *args, is_last_action, **kwargs):
-        breakpoint()
+        #breakpoint()
         print("Humanoid Nav Action step!")
         if self.motion_type == "base_velocity":
             return

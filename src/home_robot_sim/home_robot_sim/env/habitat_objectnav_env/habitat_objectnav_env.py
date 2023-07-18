@@ -99,6 +99,17 @@ class HabitatObjectNavEnv(HabitatEnv):
             scene_id, self.habitat_env.current_episode.episode_id
         )
 
+    def apply_action(self, action, info=None):
+        #just received spot agent action
+        #breakpoint()
+        action_name = ('agent_0_robot_nav_action', 'agent_1_humanoid_nav_action')
+        spot_agent_action = action._value_ #['action']
+        action_args = {'agent_0_robot_nav_action': spot_agent_action, 
+                    'agent_1_humanoid_nav_action': 100}
+        action = {'action': action_name, 'action_args': action_args}
+        super().apply_action(action, info)
+
+
     def _preprocess_obs(
         self, habitat_obs: habitat.core.simulator.Observations
     ) -> home_robot.core.interfaces.Observations:
@@ -164,10 +175,10 @@ class HabitatObjectNavEnv(HabitatEnv):
         return self.semantic_category_mapping.map_goal_id(goal[0])
 
     def _preprocess_action(self, action: home_robot.core.interfaces.Action) -> int:
-        discrete_action = cast(
-            home_robot.core.interfaces.DiscreteNavigationAction, action
-        )
-        return HabitatSimActions[discrete_action.name.lower()]
+        # discrete_action = cast(home_robot.core.interfaces.DiscreteNavigationAction, action)
+        # breakpoint()
+        # return HabitatSimActions[discrete_action.name.lower()]
+        return action
 
     def _process_info(self, info: Dict[str, Any]) -> Any:
         if info:

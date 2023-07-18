@@ -310,7 +310,6 @@ class Env:
         # Support simpler interface as well
         if isinstance(action, (str, int, np.integer)):
             action = {"action": action}
-
         observations = self.task.step(
             action=action, episode=self.current_episode
         )

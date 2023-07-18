@@ -347,10 +347,17 @@ class HabitatSim(habitat_sim.Simulator, Simulator):
 
         self.agents_mgr = ArticulatedAgentManager(self.habitat_config, self)
 
+
         self.first_setup = True
         self.ep_info: Optional[RearrangeEpisode] = None
         self.prev_loaded_navmesh = None
         self.prev_scene_id: Optional[str] = None
+
+        # Number of physics updates per action
+        self.ac_freq_ratio = self.habitat_config.ac_freq_ratio
+        # The physics update time step.
+        self.ctrl_freq = self.habitat_config.ctrl_freq
+        # Effective control speed is (ctrl_freq/ac_freq_ratio)
 
         self._debug_render_articulated_agent = (
             self.habitat_config.debug_render_articulated_agent
