@@ -11,6 +11,7 @@ from habitat.core.registry import registry
 def _try_register_nav_task():
     try:
         from habitat.tasks.nav.nav import NavigationTask  # noqa: F401
+        import habitat.tasks.rearrange.actions.oracle_nav_action
     except ImportError as e:
         navtask_import_error = e
 
