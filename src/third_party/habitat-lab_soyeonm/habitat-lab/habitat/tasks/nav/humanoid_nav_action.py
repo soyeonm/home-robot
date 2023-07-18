@@ -15,7 +15,7 @@ from habitat.tasks.rearrange.actions.actions import (
 )
 from habitat.tasks.rearrange.utils import place_agent_at_dist_from_pos
 from habitat.tasks.utils import get_angle
-
+from omegaconf import OmegaConf
 
 @registry.register_task_action
 class HumanoidNavAction(BaseVelAction, HumanoidJointAction):
@@ -32,10 +32,16 @@ class HumanoidNavAction(BaseVelAction, HumanoidJointAction):
         config = kwargs["config"]
         #self.motion_type = "human#config.motion_control
         if config['agent_index'] ==0:
-          self.motion_type = "base_velocity"
-        elif config['agent_index'] ==1:
-          self.motion_type = "human_joints"
+          #self.motion_type = "base_velocity"
+          config_dict = {'type': 'HumanoidNavAction', 'agent_index': 0, 'motion_control': 'base_velocity', 'num_joints': 17, 'turn_velocity': 1.0, 'forward_velocity': 1.0, 'turn_thresh': 0.1, 'dist_thresh': 0.5, 'lin_speed': 10.0, 'ang_speed': 10.0, 'allow_dyn_slide': True, 'allow_back': True, 'spawn_max_dist_to_obj': -1.0, 'num_spawn_attempts': 200, 'longitudinal_lin_speed': 40.0, 'lateral_lin_speed': 40.0, 'enable_rotation_check_for_dyn_slide': False, 'collision_threshold': 0.02, 'enable_lateral_move': False, 'navmesh_offset': [[0.0, 0.0], [0.15, 0.0], [-0.15, 0.0]], 'navmesh_offset_for_agent_placement': [[0.0, 0.0], [0.15, 0.0], [-0.15, 0.0]], 'sim_freq': 120.0}
 
+        elif config['agent_index'] ==1:
+          #self.motion_type = "human_joints"
+          config_dict = {'type': 'HumanoidNavAction', 'agent_index': 1, 'motion_control': 'human_joints', 'num_joints': 17, 'turn_velocity': 1.0, 'forward_velocity': 1.0, 'turn_thresh': 0.1, 'dist_thresh': 0.2, 'lin_speed': 10.0, 'ang_speed': 10.0, 'allow_dyn_slide': True, 'allow_back': True, 'spawn_max_dist_to_obj': 2.0, 'num_spawn_attempts': 200}
+
+        config = OmegaConf.create(config_dict)
+        kwargs['config'] = config
+        self.motion_type = config.motion_control
         if self.motion_type == "base_velocity":
             BaseVelAction.__init__(self, *args, **kwargs)
 
@@ -456,7 +462,10 @@ class HumanoidNavAction(BaseVelAction, HumanoidJointAction):
         return self.humanoid_controller.joint_pose + list(obj_trans_offset) + list(obj_trans_base)
 
     def step(self, *args, is_last_action, **kwargs):
+        breakpoint()
         print("Humanoid Nav Action step!")
+        if self.motion_type == "base_velocity":
+            return
         # nav_to_target_idx = kwargs[
         #     self._action_arg_prefix + "oracle_nav_action"
         # ]

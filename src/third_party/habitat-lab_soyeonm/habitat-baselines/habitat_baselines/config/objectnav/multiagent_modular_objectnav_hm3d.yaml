@@ -3,8 +3,6 @@
 defaults:
   - /habitat_baselines: habitat_baselines_rl_config_base
   - /benchmark/nav/objectnav: multiagent_objectnav_hm3d_v2_rgbd_with_semantic
-  - /habitat/task/actions@actions.agent_0_robot_nav_action: robot_nav_action
-  - /habitat/task/actions@actions.agent_1_humanoid_nav_action: humanoid_nav_action
   - /habitat_baselines/rl/policy/obs_transforms:
     - resize_shortest_edge_base
     - center_cropper_base

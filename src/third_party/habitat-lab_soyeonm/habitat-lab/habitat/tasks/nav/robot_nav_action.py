@@ -15,6 +15,8 @@ from habitat.tasks.rearrange.actions.actions import (
 )
 from habitat.tasks.rearrange.utils import place_agent_at_dist_from_pos
 from habitat.tasks.utils import get_angle
+from omegaconf import OmegaConf
+
 
 @registry.register_task_action
 class RobotNavAction(BaseVelAction, HumanoidJointAction):
@@ -28,39 +30,47 @@ class RobotNavAction(BaseVelAction, HumanoidJointAction):
     """
 
     def __init__(self, *args, task, **kwargs):
-        # config = kwargs["config"]
-        # #breakpoint()
-        # if config['agent_index'] ==0:
-        # 	self.motion_type = "base_velocity"
-        # elif config['agent_index'] ==1:
-        # 	self.motion_type = "human_joints"
+        config = kwargs["config"]
+        #breakpoint()
+        if config['agent_index'] ==0:
+        	#self.motion_type = "base_velocity"
+            #Just copied from my_changes_SIRo_socnav_latest
+            #config_dict = {'type': 'OracleNavWithBackingUpAction', 'agent_index': 0, 'motion_control': 'base_velocity', 'num_joints': 17, 'turn_velocity': 1.0, 'forward_velocity': 1.0, 'turn_thresh': 0.1, 'dist_thresh': 0.5, 'lin_speed': 10.0, 'ang_speed': 10.0, 'allow_dyn_slide': True, 'allow_back': True, 'spawn_max_dist_to_obj': -1.0, 'num_spawn_attempts': 200, 'longitudinal_lin_speed': 40.0, 'lateral_lin_speed': 40.0, 'enable_rotation_check_for_dyn_slide': False, 'collision_threshold': 0.02, 'enable_lateral_move': False, 'navmesh_offset': [[0.0, 0.0], [0.15, 0.0], [-0.15, 0.0]], 'navmesh_offset_for_agent_placement': [[0.0, 0.0], [0.15, 0.0], [-0.15, 0.0]], 'sim_freq': 120.0}
+            config_dict = {'type': 'RobotNavAction', 'agent_index': 0, 'motion_control': 'base_velocity', 'num_joints': 17, 'turn_velocity': 1.0, 'forward_velocity': 1.0, 'turn_thresh': 0.1, 'dist_thresh': 0.5, 'lin_speed': 10.0, 'ang_speed': 10.0, 'allow_dyn_slide': True, 'allow_back': True, 'spawn_max_dist_to_obj': -1.0, 'num_spawn_attempts': 200, 'longitudinal_lin_speed': 40.0, 'lateral_lin_speed': 40.0, 'enable_rotation_check_for_dyn_slide': False, 'collision_threshold': 0.02, 'enable_lateral_move': False, 'navmesh_offset': [[0.0, 0.0], [0.15, 0.0], [-0.15, 0.0]], 'navmesh_offset_for_agent_placement': [[0.0, 0.0], [0.15, 0.0], [-0.15, 0.0]], 'sim_freq': 120.0}
 
-        # #self.motion_type = config.motion_control
-        # if self.motion_type == "base_velocity":
-        #     BaseVelAction.__init__(self, *args, **kwargs)
+        elif config['agent_index'] ==1:
+        	#self.motion_type = "human_joints"
+            #config_dict = {'type': 'OracleNavWithBackingUpAction', 'agent_index': 1, 'motion_control': 'human_joints', 'num_joints': 17, 'turn_velocity': 1.0, 'forward_velocity': 1.0, 'turn_thresh': 0.1, 'dist_thresh': 0.2, 'lin_speed': 10.0, 'ang_speed': 10.0, 'allow_dyn_slide': True, 'allow_back': True, 'spawn_max_dist_to_obj': -1.0, 'num_spawn_attempts': 200, 'longitudinal_lin_speed': 40.0, 'lateral_lin_speed': 40.0, 'enable_rotation_check_for_dyn_slide': True, 'collision_threshold': 0.02, 'enable_lateral_move': False, 'navmesh_offset': [[0.0, 0.0]], 'navmesh_offset_for_agent_placement': [[0.0, 0.0]], 'sim_freq': 120.0}
+            config_dict = {'type': 'RobotNavAction', 'agent_index': 1, 'motion_control': 'human_joints', 'num_joints': 17, 'turn_velocity': 1.0, 'forward_velocity': 1.0, 'turn_thresh': 0.1, 'dist_thresh': 0.2, 'lin_speed': 10.0, 'ang_speed': 10.0, 'allow_dyn_slide': True, 'allow_back': True, 'spawn_max_dist_to_obj': 2.0, 'num_spawn_attempts': 200}
 
-        # elif self.motion_type == "human_joints":
-        #     raise Exception("Can't happen")
 
-        # else:
-        #     raise ValueError("Unrecognized motion type for oracle nav  action")
+        config = OmegaConf.create(config_dict)
+        kwargs['config'] = config
+        self.motion_type = config.motion_control
+        if self.motion_type == "base_velocity":
+            BaseVelAction.__init__(self, *args, **kwargs)
 
-        # self._task = task
+        elif self.motion_type == "human_joints":
+            raise Exception("Can't happen")
+
+        else:
+            raise ValueError("Unrecognized motion type for oracle nav  action")
+
+        self._task = task
         
-        # self._prev_ep_id = None
-        # self._targets = {}
+        self._prev_ep_id = None
+        self._targets = {}
 
-        # self.skill_done = False
+        self.skill_done = False
 
         
-        # print("RobotNavAction is called!")
+        print("RobotNavAction is called!")
 
-        # self.poses: List[np.ndarray] = []
-        # self.waypoints: List[np.ndarray] = []
-        # self.waypoint_pointer: int = 0
-        # self.prev_navigable_point: np.ndarray = np.array([])
-        # self.prev_pose: Tuple[np.ndarray, np.ndarray]
-        pass
+        self.poses: List[np.ndarray] = []
+        self.waypoints: List[np.ndarray] = []
+        self.waypoint_pointer: int = 0
+        self.prev_navigable_point: np.ndarray = np.array([])
+        self.prev_pose: Tuple[np.ndarray, np.ndarray]
 
     
 
@@ -89,6 +99,9 @@ class RobotNavAction(BaseVelAction, HumanoidJointAction):
 
     def step(self, *args, is_last_action, **kwargs):
         print("Robot Nav Action step!")
+        #breakpoint()
+        if self.motion_type == "human_joints":
+            return
         if self.counter ==0:
             navigable_point = self._sim.pathfinder.get_random_navigable_point()
             _navmesh_vertices = np.stack(

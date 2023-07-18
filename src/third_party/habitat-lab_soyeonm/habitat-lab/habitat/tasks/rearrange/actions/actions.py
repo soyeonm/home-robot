@@ -721,6 +721,7 @@ class HumanoidJointAction(ArticulatedAgentAction):
     def __init__(self, *args, sim: RearrangeSim, **kwargs):
         super().__init__(*args, sim=sim, **kwargs)
         self._sim: RearrangeSim = sim
+        #breakpoint()
         self.num_joints = self._config.num_joints
 
     def reset(self, *args, **kwargs):
