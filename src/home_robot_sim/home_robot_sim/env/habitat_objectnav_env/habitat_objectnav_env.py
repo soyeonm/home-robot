@@ -114,10 +114,10 @@ class HabitatObjectNavEnv(HabitatEnv):
         self, habitat_obs: habitat.core.simulator.Observations
     ) -> home_robot.core.interfaces.Observations:
         #breakpoint()
-        depth = self._preprocess_depth(habitat_obs["agent_1_depth"])
+        depth = self._preprocess_depth(habitat_obs["agent_0_depth"])
         goal_id, goal_name = self._preprocess_goal(habitat_obs["objectgoal"])
         obs = home_robot.core.interfaces.Observations(
-            rgb=habitat_obs["agent_1_third_rgb"],#["agent_0_rgb"],
+            rgb=habitat_obs["agent_0_third_rgb"],#["agent_0_rgb"],
             depth=depth,
             compass=habitat_obs["compass"],
             gps=self._preprocess_xy(habitat_obs["gps"]),
@@ -132,6 +132,9 @@ class HabitatObjectNavEnv(HabitatEnv):
         semantic = np.zeros((480, 640, 1)).astype(np.int32)
         #breakpoint()
         obs = self._preprocess_semantic(obs, semantic)
+        import cv2
+        cv2.imshow('human_third_rgb', habitat_obs["agent_1_third_rgb"]); cv2.waitKey(1)
+        cv2.imshow('spot_third_rgb', habitat_obs["agent_0_third_rgb"]); cv2.waitKey(1)
 
         return obs 
 

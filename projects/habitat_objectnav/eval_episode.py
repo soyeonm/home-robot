@@ -72,7 +72,7 @@ if __name__ == "__main__":
         obs = env.get_observation()
         #breakpoint()
         action, info = agent.act(obs)
-        cv2.imshow('rgb', info['rgb'].numpy()); cv2.waitKey(1)
+        #cv2.imshow('rgb', info['rgb'].numpy()); cv2.waitKey(1)
         #breakpoint()
         #action = {}
         env.apply_action(action, info=info)
